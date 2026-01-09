@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Chess Battle - 3D</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0a15 0%, #1a1a2e 50%, #0f0f1e 100%);
+            color: white;
+            overflow-x: hidden;
+        }
+
+        #container {
+            display: flex;
+            height: 100vh;
+            padding: 20px;
+            gap: 20px;
+        }
+
+        #canvas-container {
+            flex: 1;
+            position: relative;
+            background: linear-gradient(135deg, rgba(10, 10, 21, 0.8) 0%, rgba(20, 20, 40, 0.6) 100%);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5), inset 0 0 40px rgba(100, 150, 255, 0.1);
+            border: 1px solid rgba(100, 150, 255, 0.2);
+        }
+
+        #sidebar {
+            width: 350px;
+            background: linear-gradient(135deg, rgba(10, 10, 25, 0.9) 0%, rgba(20, 20, 35, 0.8) 100%);
+            border-radius: 15px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(100, 150, 255, 0.2);
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 28px;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(100, 150, 255, 0.5), 2px 2px 4px rgba(0, 0, 0, 0.8);
+            background: linear-gradient(135deg, #6b8cff 0%, #a78bfa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .control-panel {
+            background: linear-gradient(135deg, rgba(100, 150, 255, 0.15) 0%, rgba(150, 100, 255, 0.1) 100%);
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid rgba(100, 150, 255, 0.2);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .control-panel h2 {
+            font-size: 18px;
+            margin-bottom: 10px;
+            color: #a8c5ff;
+            text-shadow: 0 0 10px rgba(100, 150, 255, 0.3);
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            margin: 5px 0;
+            background: linear-gradient(135deg, #5b7aff 0%, #8b6fd9 100%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(91, 122, 255, 0.3);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(91, 122, 255, 0.5);
+            background: linear-gradient(135deg, #6b8aff 0%, #9b7fe9 100%);
+        }
+
+        button:disabled {
+            background: linear-gradient(135deg, #3a3a3a 0%, #2a2a2a 100%);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+            opacity: 0.5;
+        }
+
+        #game-status {
+            background: linear-gradient(135deg, rgba(100, 150, 255, 0.15) 0%, rgba(150, 100, 255, 0.1) 100%);
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid rgba(100, 150, 255, 0.2);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        #status-text {
+            font-size: 18px;
+            margin-bottom: 10px;
+            color: #ffd966;
+            text-shadow: 0 0 15px rgba(255, 217, 102, 0.5);
+            font-weight: 600;
+        }
+
+        #current-player {
+            font-size: 16px;
+            margin-bottom: 5px;
+            color: #c8d8ff;
+        }
+
+        #move-counter {
+            font-size: 14px;
+            color: #8899cc;
+        }
+
+        #move-history {
+            flex: 1;
+            background: linear-gradient(135deg, rgba(100, 150, 255, 0.1) 0%, rgba(150, 100, 255, 0.05) 100%);
+            padding: 15px;
+            border-radius: 12px;
+            overflow-y: auto;
+            border: 1px solid rgba(100, 150, 255, 0.2);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        #move-history h2 {
+            font-size: 18px;
+            margin-bottom: 10px;
+            color: #a8c5ff;
+            text-shadow: 0 0 10px rgba(100, 150, 255, 0.3);
+        }
+
+        .move-item {
+            padding: 8px 12px;
+            margin: 5px 0;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+        }
+
+        .move-item:hover {
+            background: rgba(100, 150, 255, 0.15);
+            transform: translateX(3px);
+        }
+
+        .move-item.white {
+            border-left-color: #f5f5f5;
+            box-shadow: -3px 0 10px rgba(245, 245, 245, 0.2);
+        }
+
+        .move-item.black {
+            border-left-color: #3a3a3a;
+            box-shadow: -3px 0 10px rgba(58, 58, 58, 0.3);
+        }
+
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 24px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+        }
+
+        .ai-config {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .ai-config h3 {
+            font-size: 16px;
+            margin-bottom: 10px;
+            color: #ffd700;
+        }
+
+        .ai-config label {
+            display: block;
+            margin: 10px 0 5px;
+            font-size: 14px;
+        }
+
+        .ai-config select, .ai-config input {
+            width: 100%;
+            padding: 8px;
+            border-radius: 4px;
+            border: none;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+        }
+
+        .ai-config input[type="checkbox"] {
+            width: auto;
+            margin-right: 8px;
+        }
+
+        .chess-clocks {
+            background: linear-gradient(135deg, rgba(100, 150, 255, 0.15) 0%, rgba(150, 100, 255, 0.1) 100%);
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid rgba(100, 150, 255, 0.2);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .clock {
+            text-align: center;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+        }
+
+        .clock-label {
+            font-size: 12px;
+            color: #8899cc;
+            margin-bottom: 5px;
+        }
+
+        .clock-time {
+            font-size: 24px;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+            color: #ffd966;
+            text-shadow: 0 0 10px rgba(255, 217, 102, 0.5);
+        }
+
+        .game-statistics {
+            background: linear-gradient(135deg, rgba(100, 150, 255, 0.15) 0%, rgba(150, 100, 255, 0.1) 100%);
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid rgba(100, 150, 255, 0.2);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-statistics h3 {
+            font-size: 16px;
+            margin-bottom: 10px;
+            color: #a8c5ff;
+            text-shadow: 0 0 10px rgba(100, 150, 255, 0.3);
+        }
+
+        #game-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .stat-item {
+            padding: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 6px;
+            text-align: center;
+            font-size: 13px;
+            color: #c8d8ff;
+        }
+
+        .ai-matchup {
+            background: linear-gradient(135deg, rgba(100, 150, 255, 0.15) 0%, rgba(150, 100, 255, 0.1) 100%);
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid rgba(100, 150, 255, 0.2);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .ai-matchup h3 {
+            font-size: 16px;
+            margin-bottom: 12px;
+            color: #a8c5ff;
+            text-shadow: 0 0 10px rgba(100, 150, 255, 0.3);
+            text-align: center;
+        }
+
+        .matchup-display {
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            gap: 10px;
+        }
+
+        .player-info {
+            flex: 1;
+            text-align: center;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .player-info.active {
+            background: rgba(255, 215, 0, 0.2);
+            border: 2px solid #ffd700;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+        }
+
+        .player-icon {
+            font-size: 32px;
+            margin-bottom: 5px;
+        }
+
+        .player-name {
+            font-size: 12px;
+            font-weight: 600;
+            color: #c8d8ff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .vs-text {
+            font-size: 18px;
+            font-weight: bold;
+            color: #ffd966;
+            text-shadow: 0 0 10px rgba(255, 217, 102, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div id="canvas-container">
+            <div id="loading">Loading 3D Chess Board...</div>
+        </div>
+
+        <div id="sidebar">
+            <h1>AI Chess Battle</h1>
+
+            <div class="control-panel">
+                <h2>Game Controls</h2>
+                <button id="start-btn">Start AI Battle</button>
+                <button id="pause-btn" disabled>Pause Game</button>
+                <button id="reset-btn">Reset Game</button>
+            </div>
+
+            <div class="ai-matchup">
+                <h3>Current Matchup</h3>
+                <div class="matchup-display">
+                    <div class="player-info white-player">
+                        <div class="player-icon">⚪</div>
+                        <div class="player-name" id="white-ai-name">White</div>
+                    </div>
+                    <div class="vs-text">VS</div>
+                    <div class="player-info black-player">
+                        <div class="player-icon">⚫</div>
+                        <div class="player-name" id="black-ai-name">Black</div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="game-status">
+                <div id="status-text">Ready to Start</div>
+                <div id="current-player">-</div>
+                <div id="move-counter">Moves: 0</div>
+            </div>
+
+            <div class="chess-clocks">
+                <div class="clock">
+                    <div class="clock-label">⚪ White Time</div>
+                    <div class="clock-time" id="white-clock">0:00</div>
+                </div>
+                <div class="clock">
+                    <div class="clock-label">⚫ Black Time</div>
+                    <div class="clock-time" id="black-clock">0:00</div>
+                </div>
+            </div>
+
+            <div class="game-statistics">
+                <h3>Statistics</h3>
+                <div id="game-stats">
+                    <div class="stat-item">Games: 0</div>
+                    <div class="stat-item">⚪ Wins: 0</div>
+                    <div class="stat-item">⚫ Wins: 0</div>
+                    <div class="stat-item">🤝 Draws: 0</div>
+                </div>
+            </div>
+
+            <div class="ai-config">
+                <h3>AI Configuration</h3>
+                <label>
+                    White Player:
+                    <select id="white-player">
+                        <option value="random">Random Moves</option>
+                        <option value="minimax">Minimax (Depth 2)</option>
+                        <option value="aggressive">Aggressive</option>
+                        <option value="claude" selected>Claude AI (Anthropic)</option>
+                        <option value="gpt">GPT-4 (OpenAI)</option>
+                    </select>
+                </label>
+                <label>
+                    Black Player:
+                    <select id="black-player">
+                        <option value="random">Random Moves</option>
+                        <option value="minimax">Minimax (Depth 2)</option>
+                        <option value="aggressive">Aggressive</option>
+                        <option value="claude">Claude AI (Anthropic)</option>
+                        <option value="gpt" selected>GPT-4 (OpenAI)</option>
+                    </select>
+                </label>
+                <label>
+                    Move Delay (ms):
+                    <input type="number" id="move-delay" value="1500" min="100" max="5000" step="100">
+                </label>
+                <label>
+                    Anthropic API Key:
+                    <input type="password" id="anthropic-key" placeholder="sk-ant-...">
+                </label>
+                <label>
+                    OpenAI API Key:
+                    <input type="password" id="openai-key" placeholder="sk-...">
+                </label>
+                <label style="display: flex; align-items: center; margin-top: 10px;">
+                    <input type="checkbox" id="auto-restart">
+                    <span>Auto-restart games (continuous mode)</span>
+                </label>
+            </div>
+
+            <div id="move-history">
+                <h2>Move History</h2>
+                <div id="moves-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://unpkg.com/chess.js@0.12.0/chess.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
