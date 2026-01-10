@@ -483,8 +483,8 @@ class ChessGame {
                 case 'claude':
                     move = await this.getClaudeMove();
                     break;
-                case 'gpt':
-                    move = await this.getGPTMove();
+                case 'deepseek':
+                    move = await this.getDeepSeekMove();
                     break;
                 default:
                     move = this.getRandomMove();
@@ -530,46 +530,29 @@ class ChessGame {
         const legalMoves = this.game.moves({ verbose: true });
         const moveHistory = this.game.history({ verbose: true });
 
-        const prompt = `You are playing chess as ${currentTurn}.
-
-Current board position (FEN): ${fen}
-
-Legal moves available: ${legalMoves.map(m => m.san).join(', ')}
-
-Move history: ${moveHistory.length > 0 ? moveHistory.slice(-10).map(m => m.san).join(' ') : 'Game just started'}
-
-Please analyze the position and choose your best move. Consider:
-- Piece safety and control of the center
-- Tactical opportunities (forks, pins, skewers)
-- King safety
-- Material balance
-
-Respond with ONLY the move in standard algebraic notation (e.g., "e4", "Nf3", "O-O"). Choose from the legal moves listed above.`;
-
-        const response = await fetch('https://api.anthropic.com/v1/messages', {
+        // Call backend API with AI SDK integration
+        const response = await fetch('/api/ai-move', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
-                'x-api-key': apiKey,
-                'anthropic-version': '2023-06-01'
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                model: 'claude-3-5-sonnet-20241022',
-                max_tokens: 150,
-                messages: [{
-                    role: 'user',
-                    content: prompt
-                }]
+                provider: 'claude',
+                apiKey: apiKey,
+                currentTurn: currentTurn,
+                fen: fen,
+                legalMoves: legalMoves,
+                moveHistory: moveHistory
             })
         });
 
         if (!response.ok) {
             const error = await response.json();
-            throw new Error(error.error?.message || 'API request failed');
+            throw new Error(error.error || 'API request failed');
         }
 
         const data = await response.json();
-        const moveText = data.content[0].text.trim();
+        const moveText = data.move;
 
         const selectedMove = legalMoves.find(m =>
             m.san === moveText ||
@@ -585,10 +568,10 @@ Respond with ONLY the move in standard algebraic notation (e.g., "e4", "Nf3", "O
         return selectedMove;
     }
 
-    async getGPTMove() {
-        const apiKey = document.getElementById('openai-key').value;
+    async getDeepSeekMove() {
+        const apiKey = document.getElementById('deepseek-key').value;
         if (!apiKey) {
-            throw new Error('Please enter your OpenAI API key');
+            throw new Error('Please enter your DeepSeek API key');
         }
 
         const currentTurn = this.game.turn() === 'w' ? 'White' : 'Black';
@@ -596,49 +579,29 @@ Respond with ONLY the move in standard algebraic notation (e.g., "e4", "Nf3", "O
         const legalMoves = this.game.moves({ verbose: true });
         const moveHistory = this.game.history({ verbose: true });
 
-        const prompt = `You are playing chess as ${currentTurn}.
-
-Current board position (FEN): ${fen}
-
-Legal moves available: ${legalMoves.map(m => m.san).join(', ')}
-
-Move history: ${moveHistory.length > 0 ? moveHistory.slice(-10).map(m => m.san).join(' ') : 'Game just started'}
-
-Please analyze the position and choose your best move. Consider:
-- Piece safety and control of the center
-- Tactical opportunities (forks, pins, skewers)
-- King safety
-- Material balance
-
-Respond with ONLY the move in standard algebraic notation (e.g., "e4", "Nf3", "O-O"). Choose from the legal moves listed above.`;
-
-        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        // Call backend API with AI SDK integration
+        const response = await fetch('/api/ai-move', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${apiKey}`
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                model: 'gpt-4',
-                max_tokens: 150,
-                temperature: 0.7,
-                messages: [{
-                    role: 'system',
-                    content: 'You are a chess grandmaster. Respond only with the chess move in standard algebraic notation.'
-                }, {
-                    role: 'user',
-                    content: prompt
-                }]
+                provider: 'deepseek',
+                apiKey: apiKey,
+                currentTurn: currentTurn,
+                fen: fen,
+                legalMoves: legalMoves,
+                moveHistory: moveHistory
             })
         });
 
         if (!response.ok) {
             const error = await response.json();
-            throw new Error(error.error?.message || 'OpenAI API request failed');
+            throw new Error(error.error || 'DeepSeek API request failed');
         }
 
         const data = await response.json();
-        const moveText = data.choices[0].message.content.trim();
+        const moveText = data.move;
 
         const selectedMove = legalMoves.find(m =>
             m.san === moveText ||
@@ -647,7 +610,7 @@ Respond with ONLY the move in standard algebraic notation (e.g., "e4", "Nf3", "O
         );
 
         if (!selectedMove) {
-            console.warn(`GPT suggested "${moveText}", falling back to random move`);
+            console.warn(`DeepSeek suggested "${moveText}", falling back to random move`);
             return this.getRandomMove();
         }
 
@@ -748,7 +711,7 @@ Respond with ONLY the move in standard algebraic notation (e.g., "e4", "Nf3", "O
         moveItem.className = `move-item ${player.toLowerCase()}`;
 
         const aiName = strategy === 'claude' ? '🤖 Claude' :
-                      strategy === 'gpt' ? '🧠 GPT-4' :
+                      strategy === 'deepseek' ? '🧠 DeepSeek' :
                       strategy === 'minimax' ? '⚙️ Minimax' :
                       strategy === 'aggressive' ? '⚔️ Aggressive' : '🎲 Random';
 
@@ -788,7 +751,7 @@ Respond with ONLY the move in standard algebraic notation (e.g., "e4", "Nf3", "O
         const getAIName = (strategy) => {
             switch(strategy) {
                 case 'claude': return '🤖 Claude AI';
-                case 'gpt': return '🧠 GPT-4';
+                case 'deepseek': return '🧠 DeepSeek AI';
                 case 'minimax': return '⚙️ Minimax';
                 case 'aggressive': return '⚔️ Aggressive';
                 case 'random': return '🎲 Random';

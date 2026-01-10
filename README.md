@@ -8,7 +8,8 @@ A stunning web application where AI models play chess against each other on a be
 - **Claude AI Integration**: Connect to Anthropic's API to have Claude play chess with strategic thinking
 - **AI vs AI Gameplay**: Configure different AI opponents for White and Black
 - **Multiple AI Strategies**:
-  - **Claude AI (API)**: Uses Anthropic's Claude 3.5 Sonnet for intelligent chess playing
+  - **Claude AI (API)**: Uses Anthropic's Claude Sonnet 4.5 for intelligent chess playing
+  - **DeepSeek AI (API)**: Uses DeepSeek's advanced reasoning model
   - **Minimax Algorithm**: Traditional chess AI with alpha-beta pruning (depth 2)
   - **Aggressive**: Prioritizes capturing opponent pieces
   - **Random Moves**: Simple random move selection
@@ -25,28 +26,42 @@ A stunning web application where AI models play chess against each other on a be
 
 - **Three.js**: Advanced 3D graphics and rendering
 - **chess.js**: Chess game logic and move validation
-- **Anthropic API**: Claude AI for strategic chess playing
+- **Vercel AI SDK**: Unified interface for AI providers
+- **Anthropic API**: Claude Sonnet 4.5 for strategic chess playing
+- **DeepSeek API**: DeepSeek reasoning model for AI chess opponents
+- **Express.js**: Backend server for AI SDK integration
 - **OrbitControls**: Interactive camera control
-- **Pure JavaScript**: No build tools required
 
 ## Setup Instructions
 
 ### Quick Start (Local Development)
 
-1. Open a terminal in the project directory
-2. Start a local server:
+**Prerequisites:**
+- Node.js 18+ installed on your system
+- NPM (comes with Node.js)
+
+**Setup Steps:**
+
+1. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+
+2. **Start the server:**
    ```bash
    npm start
    ```
-   Or use Python:
-   ```bash
-   python3 -m http.server 8000
+
+   This will start the Express server with AI SDK integration on port 3001.
+
+3. **Open your browser and navigate to:**
+   ```
+   http://localhost:3001
    ```
 
-3. Open your browser and navigate to:
-   ```
-   http://localhost:8000
-   ```
+4. **Configure API keys** in the sidebar to use Claude AI or GPT-4
+
+**Note:** The application now uses the Vercel AI SDK through a backend server for better maintainability and unified AI provider interface.
 
 ### Deploy to Vercel
 
@@ -169,8 +184,12 @@ To use Claude AI as a chess player:
 Infinite-Chess/
 ├── index.html          # Main HTML file with UI structure
 ├── app.js             # Chess game logic and 3D rendering
-├── package.json       # Project configuration
-└── README.md          # This file
+├── server.js          # Express backend with AI SDK integration
+├── package.json       # Project configuration with dependencies
+├── node_modules/      # NPM dependencies (Vercel AI SDK, Express, etc.)
+├── README.md          # This file
+├── DEPLOYMENT.md      # Deployment guide
+└── vercel.json        # Vercel deployment configuration
 ```
 
 ## How It Works
@@ -196,17 +215,37 @@ Infinite-Chess/
 - Supports standard algebraic notation (SAN) for moves
 
 ### AI Implementation
-- **Claude AI**: Sends board position (FEN) and legal moves to Anthropic API
+
+The application uses the **Vercel AI SDK** for a unified interface to multiple AI providers:
+
+- **Claude AI (via AI SDK)**:
+  - Uses `@ai-sdk/anthropic` provider
+  - Model: `claude-sonnet-4-5-20250929` (latest Claude Sonnet 4.5)
+  - Sends board position (FEN) and legal moves via backend API
   - Provides strategic context in prompt (material, tactics, king safety)
-  - Parses Claude's response to extract chosen move
+  - Parses response to extract chosen move
   - Falls back to random move if parsing fails
-  - Uses Claude 3.5 Sonnet model for best chess reasoning
+
+- **DeepSeek (via AI SDK)**:
+  - Uses `@ai-sdk/openai` provider (OpenAI-compatible API)
+  - Model: `deepseek-chat`
+  - API endpoint: `https://api.deepseek.com`
+  - Same prompt structure as Claude for consistent comparison
+  - Temperature: 0.7 for balanced creativity
+
 - **Minimax**: Recursive algorithm that evaluates future positions
   - Alpha-beta pruning optimizes search
   - Position evaluation based on material count (P=1, N=3, B=3, R=5, Q=9, K=100)
   - Searches to depth 2 for balanced performance
+
 - **Aggressive**: Filters moves for captures when possible, else random
+
 - **Random**: Simple random selection from legal moves
+
+**Architecture:**
+- Frontend (browser): Handles UI, 3D rendering, and game logic
+- Backend (Node.js): Processes AI requests using Vercel AI SDK
+- API endpoint: `POST /api/ai-move` handles Claude and DeepSeek requests
 
 ### Move Animation
 - Smooth interpolation between positions using cubic easing functions
@@ -234,10 +273,11 @@ Works best in modern browsers with WebGL support:
 
 Try these interesting AI battles:
 
-1. **Claude vs Claude**: Watch two instances of Claude play against each other (requires API key)
-2. **Claude vs Minimax**: AI reasoning vs traditional chess algorithm
-3. **Minimax vs Aggressive**: Strategic depth vs tactical aggression
-4. **Claude vs Random**: See how Claude handles weak opposition
+1. **Claude vs DeepSeek**: Watch two advanced AI models battle each other
+2. **DeepSeek vs DeepSeek**: See how DeepSeek plays against itself
+3. **Claude vs Minimax**: AI reasoning vs traditional chess algorithm
+4. **DeepSeek vs Aggressive**: Advanced AI vs tactical aggression
+5. **Minimax vs Aggressive**: Strategic depth vs tactical aggression
 
 ## API Usage and Costs
 

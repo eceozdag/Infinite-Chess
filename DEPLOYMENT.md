@@ -4,6 +4,8 @@
 
 This guide shows you how to deploy your AI Chess Battle game to Vercel for free hosting.
 
+**Important:** This application now uses a Node.js backend with the Vercel AI SDK. Make sure you deploy it as a Node.js application, not a static site.
+
 ### Method 1: Using Vercel CLI (Recommended)
 
 1. **Install Vercel CLI globally**:
