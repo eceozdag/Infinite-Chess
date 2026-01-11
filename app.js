@@ -244,152 +244,334 @@ class ChessGame {
     createPiece(type, isWhite, position) {
         const pieceGroup = new THREE.Group();
 
-        let mainGeometry;
-        const baseGeometry = new THREE.CylinderGeometry(0.35, 0.4, 0.1, 16);
-
-        switch(type) {
-            case 'p':
-                mainGeometry = new THREE.Group();
-                const pawnBase = new THREE.Mesh(
-                    new THREE.CylinderGeometry(0.25, 0.3, 0.3, 16),
-                    new THREE.MeshStandardMaterial()
-                );
-                pawnBase.position.y = 0.15;
-                const pawnBody = new THREE.Mesh(
-                    new THREE.SphereGeometry(0.22, 16, 16),
-                    new THREE.MeshStandardMaterial()
-                );
-                pawnBody.position.y = 0.45;
-                mainGeometry.add(pawnBase);
-                mainGeometry.add(pawnBody);
-                break;
-            case 'r':
-                mainGeometry = new THREE.Group();
-                const rookBody = new THREE.Mesh(
-                    new THREE.CylinderGeometry(0.3, 0.32, 0.7, 16),
-                    new THREE.MeshStandardMaterial()
-                );
-                rookBody.position.y = 0.35;
-                const rookTop = new THREE.Mesh(
-                    new THREE.BoxGeometry(0.65, 0.25, 0.65),
-                    new THREE.MeshStandardMaterial()
-                );
-                rookTop.position.y = 0.825;
-                mainGeometry.add(rookBody);
-                mainGeometry.add(rookTop);
-                break;
-            case 'n':
-                mainGeometry = new THREE.Group();
-                const knightBase = new THREE.Mesh(
-                    new THREE.CylinderGeometry(0.28, 0.32, 0.4, 16),
-                    new THREE.MeshStandardMaterial()
-                );
-                knightBase.position.y = 0.2;
-                const knightHead = new THREE.Mesh(
-                    new THREE.ConeGeometry(0.25, 0.6, 4),
-                    new THREE.MeshStandardMaterial()
-                );
-                knightHead.position.y = 0.7;
-                knightHead.rotation.y = Math.PI / 4;
-                mainGeometry.add(knightBase);
-                mainGeometry.add(knightHead);
-                break;
-            case 'b':
-                mainGeometry = new THREE.Group();
-                const bishopBody = new THREE.Mesh(
-                    new THREE.CylinderGeometry(0.25, 0.3, 0.8, 16),
-                    new THREE.MeshStandardMaterial()
-                );
-                bishopBody.position.y = 0.4;
-                const bishopTop = new THREE.Mesh(
-                    new THREE.SphereGeometry(0.2, 16, 16),
-                    new THREE.MeshStandardMaterial()
-                );
-                bishopTop.position.y = 0.95;
-                const bishopCross = new THREE.Mesh(
-                    new THREE.BoxGeometry(0.08, 0.25, 0.08),
-                    new THREE.MeshStandardMaterial()
-                );
-                bishopCross.position.y = 1.15;
-                mainGeometry.add(bishopBody);
-                mainGeometry.add(bishopTop);
-                mainGeometry.add(bishopCross);
-                break;
-            case 'q':
-                mainGeometry = new THREE.Group();
-                const queenBody = new THREE.Mesh(
-                    new THREE.CylinderGeometry(0.28, 0.33, 0.8, 16),
-                    new THREE.MeshStandardMaterial()
-                );
-                queenBody.position.y = 0.4;
-                const queenTop = new THREE.Mesh(
-                    new THREE.SphereGeometry(0.35, 16, 16),
-                    new THREE.MeshStandardMaterial()
-                );
-                queenTop.position.y = 1.0;
-                const queenCrown = new THREE.Mesh(
-                    new THREE.ConeGeometry(0.15, 0.3, 8),
-                    new THREE.MeshStandardMaterial()
-                );
-                queenCrown.position.y = 1.35;
-                mainGeometry.add(queenBody);
-                mainGeometry.add(queenTop);
-                mainGeometry.add(queenCrown);
-                break;
-            case 'k':
-                mainGeometry = new THREE.Group();
-                const kingBody = new THREE.Mesh(
-                    new THREE.CylinderGeometry(0.3, 0.34, 0.9, 16),
-                    new THREE.MeshStandardMaterial()
-                );
-                kingBody.position.y = 0.45;
-                const kingTop = new THREE.Mesh(
-                    new THREE.SphereGeometry(0.32, 16, 16),
-                    new THREE.MeshStandardMaterial()
-                );
-                kingTop.position.y = 1.05;
-                const kingCrossV = new THREE.Mesh(
-                    new THREE.BoxGeometry(0.08, 0.35, 0.08),
-                    new THREE.MeshStandardMaterial()
-                );
-                kingCrossV.position.y = 1.45;
-                const kingCrossH = new THREE.Mesh(
-                    new THREE.BoxGeometry(0.25, 0.08, 0.08),
-                    new THREE.MeshStandardMaterial()
-                );
-                kingCrossH.position.y = 1.45;
-                mainGeometry.add(kingBody);
-                mainGeometry.add(kingTop);
-                mainGeometry.add(kingCrossV);
-                mainGeometry.add(kingCrossH);
-                break;
-        }
-
+        // Main piece material - high contrast colors
+        const mainColor = isWhite ? 0xffffff : 0x1a1a1a;
         const material = new THREE.MeshStandardMaterial({
-            color: isWhite ? 0xf5f5f5 : 0x1a1a1a,
-            roughness: isWhite ? 0.5 : 0.4,
-            metalness: isWhite ? 0.2 : 0.6,
-            emissive: isWhite ? 0x222222 : 0x000000,
-            emissiveIntensity: 0.05
+            color: mainColor,
+            roughness: isWhite ? 0.3 : 0.2,
+            metalness: isWhite ? 0.1 : 0.4,
+            emissive: isWhite ? 0x333333 : 0x000000,
+            emissiveIntensity: 0.1
         });
 
+        // Accent material for details
+        const accentColor = isWhite ? 0xdddddd : 0x333333;
+        const accentMaterial = new THREE.MeshStandardMaterial({
+            color: accentColor,
+            roughness: 0.4,
+            metalness: 0.3
+        });
+
+        // Team color ring at base (blue for white, red for black)
+        const ringColor = isWhite ? 0x4488ff : 0xff4444;
+        const ringMaterial = new THREE.MeshStandardMaterial({
+            color: ringColor,
+            roughness: 0.3,
+            metalness: 0.6,
+            emissive: ringColor,
+            emissiveIntensity: 0.4
+        });
+
+        // Base platform with colored ring
+        const baseGeometry = new THREE.CylinderGeometry(0.38, 0.42, 0.08, 24);
         const baseMesh = new THREE.Mesh(baseGeometry, material);
+        baseMesh.position.y = 0.04;
         baseMesh.castShadow = true;
         baseMesh.receiveShadow = true;
         pieceGroup.add(baseMesh);
 
-        if (mainGeometry.children) {
-            mainGeometry.children.forEach(child => {
-                child.material = material;
-                child.castShadow = true;
-                child.receiveShadow = true;
-            });
-            pieceGroup.add(mainGeometry);
-        } else {
-            mainGeometry.material = material;
-            mainGeometry.castShadow = true;
-            mainGeometry.receiveShadow = true;
-            pieceGroup.add(mainGeometry);
+        // Glowing ring
+        const ringGeometry = new THREE.TorusGeometry(0.4, 0.04, 8, 32);
+        const ringMesh = new THREE.Mesh(ringGeometry, ringMaterial);
+        ringMesh.position.y = 0.02;
+        ringMesh.rotation.x = Math.PI / 2;
+        pieceGroup.add(ringMesh);
+
+        // Height scale factors for each piece type
+        // Pawn: 0.7, Rook: 1.0, Knight: 1.1, Bishop: 1.2, Queen: 1.4, King: 1.6
+
+        switch(type) {
+            case 'p': // PAWN - smallest, simple rounded top (height ~0.7)
+                const pawnStem = new THREE.Mesh(
+                    new THREE.CylinderGeometry(0.18, 0.28, 0.35, 16),
+                    material
+                );
+                pawnStem.position.y = 0.26;
+                pawnStem.castShadow = true;
+                pieceGroup.add(pawnStem);
+
+                const pawnNeck = new THREE.Mesh(
+                    new THREE.CylinderGeometry(0.12, 0.18, 0.15, 16),
+                    material
+                );
+                pawnNeck.position.y = 0.51;
+                pawnNeck.castShadow = true;
+                pieceGroup.add(pawnNeck);
+
+                const pawnHead = new THREE.Mesh(
+                    new THREE.SphereGeometry(0.16, 16, 16),
+                    material
+                );
+                pawnHead.position.y = 0.7;
+                pawnHead.castShadow = true;
+                pieceGroup.add(pawnHead);
+                break;
+
+            case 'r': // ROOK - castle tower with battlements (height ~1.0)
+                const rookBase = new THREE.Mesh(
+                    new THREE.CylinderGeometry(0.28, 0.32, 0.2, 16),
+                    material
+                );
+                rookBase.position.y = 0.18;
+                rookBase.castShadow = true;
+                pieceGroup.add(rookBase);
+
+                const rookBody = new THREE.Mesh(
+                    new THREE.CylinderGeometry(0.24, 0.28, 0.5, 16),
+                    material
+                );
+                rookBody.position.y = 0.53;
+                rookBody.castShadow = true;
+                pieceGroup.add(rookBody);
+
+                const rookTop = new THREE.Mesh(
+                    new THREE.CylinderGeometry(0.3, 0.24, 0.15, 16),
+                    material
+                );
+                rookTop.position.y = 0.86;
+                rookTop.castShadow = true;
+                pieceGroup.add(rookTop);
+
+                // Battlements (4 merlons)
+                for (let i = 0; i < 4; i++) {
+                    const merlon = new THREE.Mesh(
+                        new THREE.BoxGeometry(0.14, 0.18, 0.14),
+                        material
+                    );
+                    const angle = (i / 4) * Math.PI * 2;
+                    merlon.position.set(
+                        Math.cos(angle) * 0.2,
+                        1.02,
+                        Math.sin(angle) * 0.2
+                    );
+                    merlon.castShadow = true;
+                    pieceGroup.add(merlon);
+                }
+                break;
+
+            case 'n': // KNIGHT - horse head shape (height ~1.1)
+                const knightBase = new THREE.Mesh(
+                    new THREE.CylinderGeometry(0.26, 0.32, 0.25, 16),
+                    material
+                );
+                knightBase.position.y = 0.21;
+                knightBase.castShadow = true;
+                pieceGroup.add(knightBase);
+
+                // Horse neck (angled cylinder)
+                const knightNeck = new THREE.Mesh(
+                    new THREE.CylinderGeometry(0.16, 0.22, 0.5, 16),
+                    material
+                );
+                knightNeck.position.y = 0.55;
+                knightNeck.position.z = -0.08;
+                knightNeck.rotation.x = 0.3;
+                knightNeck.castShadow = true;
+                pieceGroup.add(knightNeck);
+
+                // Horse head (elongated box)
+                const knightHead = new THREE.Mesh(
+                    new THREE.BoxGeometry(0.22, 0.35, 0.4),
+                    material
+                );
+                knightHead.position.y = 0.9;
+                knightHead.position.z = -0.15;
+                knightHead.rotation.x = 0.4;
+                knightHead.castShadow = true;
+                pieceGroup.add(knightHead);
+
+                // Horse snout
+                const knightSnout = new THREE.Mesh(
+                    new THREE.BoxGeometry(0.16, 0.18, 0.25),
+                    material
+                );
+                knightSnout.position.y = 0.85;
+                knightSnout.position.z = -0.38;
+                knightSnout.rotation.x = 0.2;
+                knightSnout.castShadow = true;
+                pieceGroup.add(knightSnout);
+
+                // Ears
+                const ear1 = new THREE.Mesh(
+                    new THREE.ConeGeometry(0.06, 0.15, 8),
+                    material
+                );
+                ear1.position.set(-0.08, 1.12, -0.1);
+                ear1.rotation.x = -0.3;
+                ear1.castShadow = true;
+                pieceGroup.add(ear1);
+
+                const ear2 = new THREE.Mesh(
+                    new THREE.ConeGeometry(0.06, 0.15, 8),
+                    material
+                );
+                ear2.position.set(0.08, 1.12, -0.1);
+                ear2.rotation.x = -0.3;
+                ear2.castShadow = true;
+                pieceGroup.add(ear2);
+                break;
+
+            case 'b': // BISHOP - tall with diagonal slit (height ~1.2)
+                const bishopBase = new THREE.Mesh(
+                    new THREE.CylinderGeometry(0.26, 0.32, 0.2, 16),
+                    material
+                );
+                bishopBase.position.y = 0.18;
+                bishopBase.castShadow = true;
+                pieceGroup.add(bishopBase);
+
+                const bishopBody = new THREE.Mesh(
+                    new THREE.CylinderGeometry(0.14, 0.26, 0.6, 16),
+                    material
+                );
+                bishopBody.position.y = 0.58;
+                bishopBody.castShadow = true;
+                pieceGroup.add(bishopBody);
+
+                // Bishop mitre (pointed top)
+                const bishopMitre = new THREE.Mesh(
+                    new THREE.ConeGeometry(0.18, 0.35, 16),
+                    material
+                );
+                bishopMitre.position.y = 1.06;
+                bishopMitre.castShadow = true;
+                pieceGroup.add(bishopMitre);
+
+                // Diagonal slit (dark accent)
+                const slitMaterial = new THREE.MeshStandardMaterial({
+                    color: isWhite ? 0x222222 : 0x666666,
+                    roughness: 0.5
+                });
+                const slit = new THREE.Mesh(
+                    new THREE.BoxGeometry(0.22, 0.04, 0.08),
+                    slitMaterial
+                );
+                slit.position.y = 1.0;
+                slit.rotation.z = Math.PI / 4;
+                pieceGroup.add(slit);
+
+                // Top ball
+                const bishopTop = new THREE.Mesh(
+                    new THREE.SphereGeometry(0.08, 12, 12),
+                    material
+                );
+                bishopTop.position.y = 1.28;
+                bishopTop.castShadow = true;
+                pieceGroup.add(bishopTop);
+                break;
+
+            case 'q': // QUEEN - crown with spikes (height ~1.4)
+                const queenBase = new THREE.Mesh(
+                    new THREE.CylinderGeometry(0.28, 0.34, 0.2, 16),
+                    material
+                );
+                queenBase.position.y = 0.18;
+                queenBase.castShadow = true;
+                pieceGroup.add(queenBase);
+
+                const queenBody = new THREE.Mesh(
+                    new THREE.CylinderGeometry(0.18, 0.28, 0.7, 16),
+                    material
+                );
+                queenBody.position.y = 0.63;
+                queenBody.castShadow = true;
+                pieceGroup.add(queenBody);
+
+                const queenNeck = new THREE.Mesh(
+                    new THREE.SphereGeometry(0.22, 16, 16),
+                    material
+                );
+                queenNeck.position.y = 1.05;
+                queenNeck.castShadow = true;
+                pieceGroup.add(queenNeck);
+
+                // Crown spikes (8 points)
+                for (let i = 0; i < 8; i++) {
+                    const spike = new THREE.Mesh(
+                        new THREE.ConeGeometry(0.05, 0.2, 8),
+                        material
+                    );
+                    const angle = (i / 8) * Math.PI * 2;
+                    spike.position.set(
+                        Math.cos(angle) * 0.15,
+                        1.3,
+                        Math.sin(angle) * 0.15
+                    );
+                    spike.castShadow = true;
+                    pieceGroup.add(spike);
+                }
+
+                // Crown jewel on top
+                const queenJewel = new THREE.Mesh(
+                    new THREE.SphereGeometry(0.08, 12, 12),
+                    ringMaterial
+                );
+                queenJewel.position.y = 1.42;
+                pieceGroup.add(queenJewel);
+                break;
+
+            case 'k': // KING - tallest with prominent cross (height ~1.6)
+                const kingBase = new THREE.Mesh(
+                    new THREE.CylinderGeometry(0.3, 0.36, 0.22, 16),
+                    material
+                );
+                kingBase.position.y = 0.19;
+                kingBase.castShadow = true;
+                pieceGroup.add(kingBase);
+
+                const kingBody = new THREE.Mesh(
+                    new THREE.CylinderGeometry(0.2, 0.3, 0.8, 16),
+                    material
+                );
+                kingBody.position.y = 0.69;
+                kingBody.castShadow = true;
+                pieceGroup.add(kingBody);
+
+                const kingNeck = new THREE.Mesh(
+                    new THREE.CylinderGeometry(0.22, 0.2, 0.15, 16),
+                    material
+                );
+                kingNeck.position.y = 1.17;
+                kingNeck.castShadow = true;
+                pieceGroup.add(kingNeck);
+
+                // Crown band
+                const kingCrown = new THREE.Mesh(
+                    new THREE.CylinderGeometry(0.24, 0.22, 0.12, 16),
+                    accentMaterial
+                );
+                kingCrown.position.y = 1.3;
+                kingCrown.castShadow = true;
+                pieceGroup.add(kingCrown);
+
+                // Large cross - vertical
+                const crossV = new THREE.Mesh(
+                    new THREE.BoxGeometry(0.1, 0.4, 0.1),
+                    material
+                );
+                crossV.position.y = 1.56;
+                crossV.castShadow = true;
+                pieceGroup.add(crossV);
+
+                // Large cross - horizontal
+                const crossH = new THREE.Mesh(
+                    new THREE.BoxGeometry(0.3, 0.1, 0.1),
+                    material
+                );
+                crossH.position.y = 1.6;
+                crossH.castShadow = true;
+                pieceGroup.add(crossH);
+                break;
         }
 
         const pos = this.boardPositionToWorld(position);
@@ -443,7 +625,7 @@ class ChessGame {
                 if (progress < 1) {
                     requestAnimationFrame(animateMove);
                 } else {
-                    piece.position.y = 0.5;
+                    piece.position.y = 0.05;
                     this.pieces[to] = piece;
                     delete this.pieces[from];
                     this.animating = false;
@@ -459,7 +641,7 @@ class ChessGame {
     }
 
     async makeAIMove() {
-        if (!this.isPlaying || this.isPaused || this.game.isGameOver()) return;
+        if (!this.isPlaying || this.isPaused || this.game.game_over()) return;
 
         const currentTurn = this.game.turn();
         const currentPlayer = currentTurn === 'w' ? 'White' : 'Black';
@@ -486,6 +668,9 @@ class ChessGame {
                 case 'deepseek':
                     move = await this.getDeepSeekMove();
                     break;
+                case 'groq':
+                    move = await this.getGroqMove();
+                    break;
                 default:
                     move = this.getRandomMove();
             }
@@ -505,8 +690,17 @@ class ChessGame {
                 this.addMoveToHistory(move, currentPlayer, strategy);
                 this.updateStatus();
                 this.updateClock();
+                this.updateEvalBar();
 
-                if (this.game.isGameOver()) {
+                // Update GM commentary if available
+                if (move.commentary) {
+                    this.updateCommentary(move.san, currentPlayer, move.commentary);
+                } else if (strategy === 'groq' || strategy === 'claude' || strategy === 'deepseek') {
+                    // Clear old commentary for AI moves without new commentary
+                    this.updateCommentary(move.san, currentPlayer, '');
+                }
+
+                if (this.game.game_over()) {
                     this.endGame();
                 } else {
                     setTimeout(() => this.makeAIMove(), this.moveDelay);
@@ -617,6 +811,94 @@ class ChessGame {
         return selectedMove;
     }
 
+    async getGroqMove() {
+        const apiKey = document.getElementById('groq-key').value;
+        if (!apiKey) {
+            throw new Error('Please enter your Groq API key');
+        }
+
+        const currentTurn = this.game.turn() === 'w' ? 'White' : 'Black';
+        const fen = this.game.fen();
+        const legalMoves = this.game.moves({ verbose: true });
+        const moveHistory = this.game.history({ verbose: true });
+
+        console.log(`[Groq ${currentTurn}] FEN: ${fen}`);
+        console.log(`[Groq ${currentTurn}] Legal moves:`, legalMoves.map(m => m.san).join(', '));
+
+        const response = await fetch('/api/ai-move', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                provider: 'groq',
+                apiKey: apiKey,
+                currentTurn: currentTurn,
+                fen: fen,
+                legalMoves: legalMoves,
+                moveHistory: moveHistory,
+                withCommentary: true
+            })
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Groq API request failed');
+        }
+
+        const data = await response.json();
+        const moveText = (data.move || '').trim();
+        const commentary = data.commentary || '';
+
+        console.log(`[Groq ${currentTurn}] AI suggested: "${moveText}"`);
+        if (commentary) {
+            console.log(`[Groq ${currentTurn}] Commentary: "${commentary}"`);
+        }
+
+        // Try multiple parsing strategies
+        let selectedMove = legalMoves.find(m => m.san === moveText);
+
+        if (!selectedMove) {
+            // Try without check/checkmate symbols
+            const cleanMove = moveText.replace(/[+#]/g, '');
+            selectedMove = legalMoves.find(m => m.san.replace(/[+#]/g, '') === cleanMove);
+        }
+
+        if (!selectedMove) {
+            // Try LAN format (e2e4)
+            selectedMove = legalMoves.find(m => m.lan === moveText.toLowerCase());
+        }
+
+        if (!selectedMove) {
+            // Try from+to format
+            selectedMove = legalMoves.find(m => (m.from + m.to) === moveText.toLowerCase().replace(/[^a-h1-8]/g, ''));
+        }
+
+        if (!selectedMove) {
+            // Try extracting just the move from a longer response
+            const moveMatch = moveText.match(/([KQRBN]?[a-h]?[1-8]?x?[a-h][1-8](?:=[QRBN])?|O-O-O|O-O)/i);
+            if (moveMatch) {
+                const extractedMove = moveMatch[1];
+                selectedMove = legalMoves.find(m => m.san === extractedMove || m.san.replace(/[+#]/g, '') === extractedMove);
+                console.log(`[Groq ${currentTurn}] Extracted move from response: "${extractedMove}"`);
+            }
+        }
+
+        if (!selectedMove) {
+            console.warn(`[Groq ${currentTurn}] Could not parse "${moveText}", falling back to random move`);
+            const randomMove = this.getRandomMove();
+            console.log(`[Groq ${currentTurn}] Playing random move: ${randomMove.san}`);
+            randomMove.commentary = '';
+            return randomMove;
+        }
+
+        console.log(`[Groq ${currentTurn}] Playing: ${selectedMove.san} (${selectedMove.from}->${selectedMove.to})`);
+
+        // Attach commentary to the move object
+        selectedMove.commentary = commentary;
+        return selectedMove;
+    }
+
     getRandomMove() {
         const moves = this.game.moves({ verbose: true });
         return moves[Math.floor(Math.random() * moves.length)];
@@ -643,7 +925,7 @@ class ChessGame {
     }
 
     minimax(depth, alpha, beta, isMaximizing) {
-        if (depth === 0 || this.game.isGameOver()) {
+        if (depth === 0 || this.game.game_over()) {
             return this.evaluateBoard();
         }
 
@@ -675,23 +957,186 @@ class ChessGame {
     }
 
     evaluateBoard() {
-        const pieceValues = {
-            p: 1, n: 3, b: 3, r: 5, q: 9, k: 100
-        };
+        const pieceValues = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 0 };
+
+        // Piece-square tables for positional bonuses (simplified)
+        const pawnTable = [
+            [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5],
+            [0.1, 0.1, 0.2, 0.3, 0.3, 0.2, 0.1, 0.1],
+            [0.05, 0.05, 0.1, 0.25, 0.25, 0.1, 0.05, 0.05],
+            [0.0, 0.0, 0.0, 0.2, 0.2, 0.0, 0.0, 0.0],
+            [0.05, -0.05, -0.1, 0.0, 0.0, -0.1, -0.05, 0.05],
+            [0.05, 0.1, 0.1, -0.2, -0.2, 0.1, 0.1, 0.05],
+            [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+        ];
+
+        const knightTable = [
+            [-0.5, -0.4, -0.3, -0.3, -0.3, -0.3, -0.4, -0.5],
+            [-0.4, -0.2, 0.0, 0.0, 0.0, 0.0, -0.2, -0.4],
+            [-0.3, 0.0, 0.1, 0.15, 0.15, 0.1, 0.0, -0.3],
+            [-0.3, 0.05, 0.15, 0.2, 0.2, 0.15, 0.05, -0.3],
+            [-0.3, 0.0, 0.15, 0.2, 0.2, 0.15, 0.0, -0.3],
+            [-0.3, 0.05, 0.1, 0.15, 0.15, 0.1, 0.05, -0.3],
+            [-0.4, -0.2, 0.0, 0.05, 0.05, 0.0, -0.2, -0.4],
+            [-0.5, -0.4, -0.3, -0.3, -0.3, -0.3, -0.4, -0.5]
+        ];
+
+        const centerSquares = ['d4', 'd5', 'e4', 'e5'];
 
         let score = 0;
+        let whiteMobility = 0;
+        let blackMobility = 0;
+        let whiteDevelopment = 0;
+        let blackDevelopment = 0;
+
         const board = this.game.board();
 
-        for (let row of board) {
-            for (let square of row) {
+        // Material and positional evaluation
+        for (let row = 0; row < 8; row++) {
+            for (let col = 0; col < 8; col++) {
+                const square = board[row][col];
                 if (square) {
                     const value = pieceValues[square.type];
-                    score += square.color === 'w' ? value : -value;
+                    const isWhite = square.color === 'w';
+                    const r = isWhite ? row : 7 - row;
+
+                    // Base material
+                    score += isWhite ? value : -value;
+
+                    // Positional bonuses
+                    let posBonus = 0;
+                    if (square.type === 'p') {
+                        posBonus = pawnTable[r][col];
+                    } else if (square.type === 'n') {
+                        posBonus = knightTable[r][col];
+                    } else if (square.type === 'b') {
+                        // Bishops like long diagonals
+                        posBonus = (row + col) % 2 === 0 ? 0.1 : 0.1;
+                        if (row !== 0 && row !== 7) posBonus += 0.1; // Not on back rank
+                    } else if (square.type === 'r') {
+                        // Rooks like open files and 7th rank
+                        if (r === 1) posBonus += 0.2; // 7th rank
+                    } else if (square.type === 'q') {
+                        // Queen shouldn't develop too early
+                        if (this.moveCount < 10 && r < 6) posBonus -= 0.1;
+                    }
+
+                    score += isWhite ? posBonus : -posBonus;
+
+                    // Development bonus (pieces moved from starting squares)
+                    if (square.type === 'n' || square.type === 'b') {
+                        const startRow = isWhite ? 7 : 0;
+                        if (row !== startRow) {
+                            if (isWhite) whiteDevelopment += 0.15;
+                            else blackDevelopment += 0.15;
+                        }
+                    }
                 }
             }
         }
 
+        // Center control bonus
+        for (const sq of centerSquares) {
+            const file = sq.charCodeAt(0) - 'a'.charCodeAt(0);
+            const rank = 8 - parseInt(sq[1]);
+            const piece = board[rank][file];
+            if (piece) {
+                score += piece.color === 'w' ? 0.3 : -0.3;
+            }
+        }
+
+        // Add development scores
+        score += whiteDevelopment - blackDevelopment;
+
+        // King safety (simplified - penalize exposed king)
+        const whiteKingPos = this.findKing('w', board);
+        const blackKingPos = this.findKing('b', board);
+
+        if (whiteKingPos && this.moveCount > 10) {
+            // Penalize king in center during middlegame
+            if (whiteKingPos.col >= 2 && whiteKingPos.col <= 5) {
+                score -= 0.3;
+            }
+        }
+        if (blackKingPos && this.moveCount > 10) {
+            if (blackKingPos.col >= 2 && blackKingPos.col <= 5) {
+                score += 0.3;
+            }
+        }
+
+        // Mobility (number of legal moves as a rough proxy)
+        const currentTurn = this.game.turn();
+        const moves = this.game.moves().length;
+        if (currentTurn === 'w') {
+            whiteMobility = moves * 0.02;
+        } else {
+            blackMobility = moves * 0.02;
+        }
+        score += whiteMobility - blackMobility;
+
         return score;
+    }
+
+    findKing(color, board) {
+        for (let row = 0; row < 8; row++) {
+            for (let col = 0; col < 8; col++) {
+                const piece = board[row][col];
+                if (piece && piece.type === 'k' && piece.color === color) {
+                    return { row, col };
+                }
+            }
+        }
+        return null;
+    }
+
+    updateEvalBar() {
+        const score = this.evaluateBoard();
+        const evalBlack = document.getElementById('eval-black');
+        const evalScore = document.getElementById('eval-score');
+
+        if (!evalBlack || !evalScore) return;
+
+        // Convert score to percentage (sigmoid-like mapping)
+        // Score of +5 = ~90% white, -5 = ~10% white
+        const maxScore = 10;
+        const clampedScore = Math.max(-maxScore, Math.min(maxScore, score));
+        const whitePercent = 50 + (clampedScore / maxScore) * 45;
+        const blackPercent = 100 - whitePercent;
+
+        evalBlack.style.height = `${blackPercent}%`;
+
+        // Format score display
+        const displayScore = score >= 0 ? `+${score.toFixed(1)}` : score.toFixed(1);
+        evalScore.textContent = displayScore;
+
+        // Color the score based on who's winning
+        if (score > 0.5) {
+            evalScore.style.color = '#ffffff';
+            evalScore.style.textShadow = '0 0 5px rgba(255, 255, 255, 0.5)';
+        } else if (score < -0.5) {
+            evalScore.style.color = '#333';
+            evalScore.style.textShadow = '0 0 5px rgba(0, 0, 0, 0.5)';
+        } else {
+            evalScore.style.color = '#ffd966';
+            evalScore.style.textShadow = '0 0 5px rgba(255, 217, 102, 0.5)';
+        }
+    }
+
+    updateCommentary(move, player, commentary) {
+        const moveEl = document.getElementById('commentary-move');
+        const textEl = document.getElementById('commentary-text');
+
+        if (!moveEl || !textEl) return;
+
+        const badgeClass = player === 'White' ? 'white' : 'black';
+        moveEl.innerHTML = `<span class="player-badge ${badgeClass}">${player}</span> plays <strong>${move}</strong>`;
+
+        if (commentary) {
+            textEl.textContent = commentary;
+        } else {
+            textEl.textContent = '';
+        }
     }
 
     getAggressiveMove() {
@@ -712,6 +1157,7 @@ class ChessGame {
 
         const aiName = strategy === 'claude' ? '🤖 Claude' :
                       strategy === 'deepseek' ? '🧠 DeepSeek' :
+                      strategy === 'groq' ? '⚡ Groq' :
                       strategy === 'minimax' ? '⚙️ Minimax' :
                       strategy === 'aggressive' ? '⚔️ Aggressive' : '🎲 Random';
 
@@ -739,7 +1185,7 @@ class ChessGame {
             }
         }
 
-        if (this.game.inCheck()) {
+        if (this.game.in_check()) {
             document.getElementById('status-text').textContent = 'CHECK!';
         }
     }
@@ -752,6 +1198,7 @@ class ChessGame {
             switch(strategy) {
                 case 'claude': return '🤖 Claude AI';
                 case 'deepseek': return '🧠 DeepSeek AI';
+                case 'groq': return '⚡ Groq AI';
                 case 'minimax': return '⚙️ Minimax';
                 case 'aggressive': return '⚔️ Aggressive';
                 case 'random': return '🎲 Random';
@@ -769,7 +1216,7 @@ class ChessGame {
         let result = '';
         let winner = null;
 
-        if (this.game.isCheckmate()) {
+        if (this.game.in_checkmate()) {
             winner = this.game.turn() === 'w' ? 'Black' : 'White';
             result = `Checkmate! ${winner} Wins!`;
             if (winner === 'White') {
@@ -777,16 +1224,16 @@ class ChessGame {
             } else {
                 this.blackWins++;
             }
-        } else if (this.game.isDraw()) {
+        } else if (this.game.in_draw()) {
             result = 'Game Draw!';
             this.draws++;
-        } else if (this.game.isStalemate()) {
+        } else if (this.game.in_stalemate()) {
             result = 'Stalemate!';
             this.draws++;
-        } else if (this.game.isThreefoldRepetition()) {
+        } else if (this.game.in_threefold_repetition()) {
             result = 'Draw by Repetition!';
             this.draws++;
-        } else if (this.game.isInsufficientMaterial()) {
+        } else if (this.game.insufficient_material()) {
             result = 'Draw by Insufficient Material!';
             this.draws++;
         }
@@ -874,6 +1321,13 @@ class ChessGame {
         document.getElementById('pause-btn').disabled = true;
         document.getElementById('pause-btn').textContent = 'Pause Game';
         this.updateClock();
+        this.updateEvalBar();
+
+        // Clear commentary
+        const commentaryMove = document.getElementById('commentary-move');
+        const commentaryText = document.getElementById('commentary-text');
+        if (commentaryMove) commentaryMove.innerHTML = '';
+        if (commentaryText) commentaryText.textContent = '';
     }
 
     updateClock() {
